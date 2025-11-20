@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HDFS Log Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard.css') }}">
+    <script src="https://cdn.socket.io/4.5.4/socket.io.min.js"></script>
+</head>
+
+<body>
+    <!-- Sidebar -->
+    <aside class="sidebar">
+        <div class="logo">
+            <h2>HDFS Analytics</h2>
+        </div>
+
+        <nav class="nav-menu">
+            <a href="#" class="nav-item active">
+                <span>Dashboard</span>
+            </a>
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="status-indicator">
+                <span class="status-dot" id="connection-status"></span>
+                <span id="status-text">Đang kết nối...</span>
+            </div>
+        </div>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Header -->
+        <header class="header">
+            <div class="header-left">
+                <h1 id="page-title">Bảng điều khiển phát hiện Log</h1>
+                <p class="subtitle" id="page-subtitle">Giám sát thời gian thực</p>
+            </div>
+            <div class="header-right">
+                <div class="lang-switcher">
+                    <button class="lang-btn active" onclick="switchLang('vi')">VI</button>
+                    <button class="lang-btn" onclick="switchLang('en')">EN</button>
+                </div>
+            </div>
+        </header>
+
+
+
+        <!-- Filter Panel -->
+        <div class="filter-panel" id="filter-panel">
+            <div class="filter-content">
+                <div class="filter-group">
+                    <label>Dự đoán</label>
+                    <div class="chip-group">
+                        <button class="chip active" onclick="setFilter('prediction', 'all')">Tất cả</button>
+                        <button class="chip" onclick="setFilter('prediction', '1')">Bình thường</button>
+                        <button class="chip" onclick="setFilter('prediction', '0')">Lỗi</button>
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>Thời gian</label>
+                    <div class="time-filter-group">
+                        <input type="datetime-local" class="time-input" id="start-time" placeholder="Từ">
+                        <span class="time-separator">→</span>
+                        <input type="datetime-local" class="time-input" id="end-time" placeholder="Đến">
+                    </div>
+                </div>
+                <div class="filter-group">
+                    <label>Tìm kiếm</label>
+                    <input type="text" class="search-input" id="search-keyword" placeholder="Tìm kiếm từ khóa...">
+                </div>
+                <div class="filter-actions">
+                    <button class="btn btn-primary" onclick="applyFilters()">Áp dụng</button>
+                    <button class="btn btn-secondary" onclick="resetFilters()">Thiết lập lại</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Log List -->
+        <div class="log-container">
+            <div class="log-header">
+                <h2>Dòng phát hiện</h2>
+                <div class="log-actions">
+                    <button class="btn btn-sm" onclick="toggleSelectMode()" id="select-btn">Chọn</button>
+                    <button class="btn btn-sm btn-danger" onclick="deleteSelected()" id="delete-btn" style="display: none;">Xóa</button>
+                </div>
+            </div>
+
+            <div class="log-list" id="log-list">
+                <div class="empty-state">
+                    <div class="empty-text">Đang chờ dữ liệu...</div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+
+</html>

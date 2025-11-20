@@ -1,0 +1,72 @@
+# Docker Compose - Loghub Detection Stack
+# Usage: docker-compose up -d
+
+version: '3.8'
+
+services:
+  # HBase Standalone
+  hbase:
+    image: bde2020/hbase:2.4.5-hadoop3.2.1
+    container_name: loghub-hbase
+    ports:
+      - "9090:9090"     # Thrift API
+      - "16010:16010"   # HBase Web UI
+    environment:
+      HBASE_CONF_hbase_regionserver_wal_codec: org.apache.hadoop.hbase.codec.KeyValueCodec
+    volumes:
+      - hbase-data:/hbase
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "9090"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - loghub
+
+  # Flask + Socket.IO Dashboard
+  dashboard:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: loghub-dashboard
+    ports:
+      - "5000:5000"
+    environment:
+      HBASE_HOST: hbase
+      HBASE_PORT: 9090
+      HBASE_TABLE: loghub:detections_v1
+      FLASK_DEBUG: "False"
+      FLASK_PORT: 5000
+      LOG_LEVEL: INFO
+    depends_on:
+      hbase:
+        condition: service_healthy
+    volumes:
+      - ./app.py:/app/app.py
+      - ./hbase_client.py:/app/hbase_client.py
+      - ./config.py:/app/config.py
+      - ./templates:/app/templates
+    networks:
+      - loghub
+    restart: unless-stopped
+
+  # Optional: Zookeeper (nếu dùng full HBase cluster)
+  # zookeeper:
+  #   image: zookeeper:latest
+  #   container_name: loghub-zookeeper
+  #   ports:
+  #     - "2181:2181"
+  #   environment:
+  #     ZOO_CFG_EXTRA: "tickTime=2000 dataDir=/var/lib/zookeeper/data clientPort=2181"
+  #   volumes:
+  #     - zk-data:/var/lib/zookeeper/data
+  #   networks:
+  #     - loghub
+
+volumes:
+  hbase-data:
+    driver: local
+
+networks:
+  loghub:
+    driver: bridge
